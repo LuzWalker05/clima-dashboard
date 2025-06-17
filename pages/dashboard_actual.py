@@ -130,7 +130,8 @@ st.pyplot(fig2)
 st.markdown("---")
 
 # Botón para volver
-if st.button("🔙 Volver al Inicio"):
-    st.switch_page("main.py")
+if st.button("🔙 Volver al Inicio", key="volver_btn"):
+    st.session_state.page = "main"  # Actualiza el estado
+    st.rerun()
 
 st.caption("© Dashboard Climático desarrollado con ❤️ por LuzWalker")
