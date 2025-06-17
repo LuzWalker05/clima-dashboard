@@ -1,7 +1,7 @@
 --only-binary=:all:
 streamlit==1.45.1
 pandas==2.2.1
-pillow==10.3.0
+pillow==10.3.0 --global-option="--disable-platform-guessing"
 pydeck==0.9.1
 matplotlib==3.8.4
 numpy==1.26.4
