@@ -54,8 +54,8 @@ st.markdown("---")
 
 # Selección de localidad
 localidades = df['LOCALIDAD'].dropna().unique()
-params = st.query_params
-localidad_param = params.get("localidad")
+params = st.experimental_get_query_params() if hasattr(st, 'experimental_get_query_params') else {}
+localidad_param = params.get("localidad", [None])[0]
 if localidad_param and localidad_param[0] in localidades:
     localidad_default = localidad_param[0]
 else:
