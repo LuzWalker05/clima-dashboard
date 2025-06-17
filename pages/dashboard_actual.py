@@ -133,4 +133,4 @@ if st.button("🔙 Volver al Inicio"):
     st.session_state.page = "main"  
     st.experimental_rerun()  
 
-st.caption("© Dashboard Climático desarrollado con ❤️ por LuzWalker")
+st.caption("© Dashboard Climático desarrollado por ❤️ por LuzWalker")
