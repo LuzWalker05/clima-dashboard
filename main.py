@@ -207,3 +207,4 @@ for loc in df['LOCALIDAD'].dropna().unique():
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+st.caption("© Dashboard Climático desarrollado con ❤️ por LuzWalker")
