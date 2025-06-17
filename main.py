@@ -4,14 +4,6 @@ from PIL import Image
 import os
 import base64
 
-if "page" not in st.session_state:
-    st.session_state.page = "main"
-
-if st.session_state.page == "main":
-    if st.button("Ir al Dashboard"):
-        st.session_state.page = "dashboard"
-        st.experimental_rerun()
-
 # Configuración de página
 st.set_page_config(
     page_title="Clima por Localidad",
