@@ -1,3 +1,4 @@
+--only-binary=:all:
 streamlit==1.45.1
 pandas==2.2.1
 pillow==10.3.0
