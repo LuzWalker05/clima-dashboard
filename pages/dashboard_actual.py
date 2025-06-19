@@ -269,13 +269,6 @@ if not data_filtrada.empty:
         # Mostrar tabla con las predicciones
         st.dataframe(pred_df.set_index('Fecha').style.format("{:.1f}"), height=300)
         
-        # Explicación del modelo
-        st.markdown("""
-        **Nota sobre las predicciones:**
-        - Las predicciones se realizan usando un modelo de regresión lineal para las temperaturas.
-        - Para la precipitación se usa una regresión polinomial de grado 2 para capturar mejor los patrones.
-        - Estas predicciones son aproximadas y deben tomarse como referencia general.
-        """)
     else:
         st.warning("Se necesitan al menos 10 registros para generar predicciones. Ajuste los filtros para incluir más datos.")
 else:
