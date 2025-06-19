@@ -122,8 +122,12 @@ with st.container():
             data_filtrada = data_localidad[
                 (data_localidad['FECHA'] >= pd.to_datetime(rango_fechas[0])) & 
                 (data_localidad['FECHA'] <= pd.to_datetime(rango_fechas[1]))
+            ]
     
     st.markdown('</div>', unsafe_allow_html=True)
+
+# Resto del código permanece igual...
+# [Aquí iría el resto del código que no mostré para brevedad]
 
 # Métricas por localidad (filtradas)
 st.subheader(f"📍 Datos para {localidad} - {filtro_opcion}")
