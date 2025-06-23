@@ -54,8 +54,6 @@ def load_data():
     df['FECHA'] = pd.to_datetime(df['FECHA'], format='%d/%m/%Y', errors='coerce')
     for col in ['PRECIP', 'TMAX', 'TMIN']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-    
-    # Extraer año y mes para filtros
     df['AÑO'] = df['FECHA'].dt.year
     df['MES'] = df['FECHA'].dt.month
     df['DIA'] = df['FECHA'].dt.day
@@ -89,7 +87,6 @@ st.subheader("🔍 Filtros de Fecha")
 with st.container():
     st.markdown('<div class="filter-container">', unsafe_allow_html=True)
     
-    # Opciones de filtrado
     filtro_opcion = st.radio("Seleccione el tipo de filtro:", 
                             ["Todo el histórico", "Por año", "Por mes y año", "Rango de fechas"],
                             horizontal=True)
@@ -126,10 +123,7 @@ with st.container():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Resto del código permanece igual...
-# [Aquí iría el resto del código que no mostré para brevedad]
-
-# Métricas por localidad (filtradas)
+# Métricas
 st.subheader(f"📍 Datos para {localidad} - {filtro_opcion}")
 col5, col6, col7, col8 = st.columns(4)
 col5.metric("🌧️ Precipitación Prom", f"{data_filtrada['PRECIP'].mean():.2f} mm" if not data_filtrada.empty else "N/A")
@@ -137,11 +131,10 @@ col6.metric("🌡️ T. Máxima Prom", f"{data_filtrada['TMAX'].mean():.2f} °C"
 col7.metric("🌡️ T. Mínima Prom", f"{data_filtrada['TMIN'].mean():.2f} °C" if not data_filtrada.empty else "N/A")
 col8.metric("🗃️ Registros", len(data_filtrada))
 
-# Mapa de la localidad seleccionada
+# Mapa
 if 'LATITUD' in df.columns and 'LONGITUD' in df.columns and not data_filtrada.empty:
     st.subheader(f"🗺️ Mapa de {localidad}")
     localidad_data = df[df['LOCALIDAD'] == localidad].iloc[0]
-    
     with st.container():
         st.pydeck_chart(pdk.Deck(
             map_style="mapbox://styles/mapbox/light-v9",
@@ -168,13 +161,11 @@ if 'LATITUD' in df.columns and 'LONGITUD' in df.columns and not data_filtrada.em
             tooltip={"text": "{LOCALIDAD}"}
         ))
 
-# Gráficos con datos filtrados
+# Gráficas y predicción
 if not data_filtrada.empty:
     st.markdown("---")
     st.subheader("📊 Evolución de Temperaturas")
-    
     data_filtrada = data_filtrada.sort_values(by='FECHA')
-    
     fig, ax = plt.subplots(figsize=(12,6))
     ax.plot(data_filtrada['FECHA'], data_filtrada['TMAX'], label='TMAX', color='crimson')
     ax.plot(data_filtrada['FECHA'], data_filtrada['TMIN'], label='TMIN', color='dodgerblue')
@@ -183,7 +174,7 @@ if not data_filtrada.empty:
     ax.legend()
     plt.xticks(rotation=45)
     st.pyplot(fig)
-    
+
     st.subheader("🌧️ Evolución de Precipitación")
     fig2, ax2 = plt.subplots(figsize=(12,4))
     ax2.plot(data_filtrada['FECHA'], data_filtrada['PRECIP'], label='PRECIP', color='seagreen')
@@ -192,51 +183,48 @@ if not data_filtrada.empty:
     ax2.legend()
     plt.xticks(rotation=45)
     st.pyplot(fig2)
-    
-    # Predicciones con regresión lineal
+
     st.markdown("---")
     st.subheader("🔮 Predicciones Climáticas")
-    
-    if len(data_filtrada) > 10:  # Necesitamos suficientes datos para hacer predicciones
-        # Preparar datos para el modelo
+
+    if len(data_filtrada) > 10:
         data_filtrada['DIAS'] = (data_filtrada['FECHA'] - data_filtrada['FECHA'].min()).dt.days
-        
-        # Modelo para TMAX
+
+        # 🔧 CORRECCIÓN: Filtramos valores NaN antes de ajustar el modelo
+        data_filtrada = data_filtrada.dropna(subset=["DIAS", "TMAX", "TMIN", "PRECIP"])
+
+        from sklearn.preprocessing import PolynomialFeatures
+        from sklearn.pipeline import make_pipeline
+
+        # Modelo TMAX
         model_tmax = LinearRegression()
         X = data_filtrada[['DIAS']]
         y_tmax = data_filtrada['TMAX'].values
         model_tmax.fit(X, y_tmax)
-        
-        # Modelo para TMIN
+
+        # Modelo TMIN
         model_tmin = LinearRegression()
         y_tmin = data_filtrada['TMIN'].values
         model_tmin.fit(X, y_tmin)
-        
-        # Modelo para PRECIP (usamos PolynomialFeatures para mejor ajuste)
-        from sklearn.preprocessing import PolynomialFeatures
-        from sklearn.pipeline import make_pipeline
-        
+
+        # Modelo PRECIP
         model_precip = make_pipeline(
             PolynomialFeatures(degree=2),
             LinearRegression()
         )
         y_precip = data_filtrada['PRECIP'].values
         model_precip.fit(X, y_precip)
-        
-        # Predicciones futuras (30 días adelante)
+
         ultima_fecha = data_filtrada['FECHA'].max()
         dias_prediccion = 30
         fechas_futuras = pd.date_range(ultima_fecha, periods=dias_prediccion+1)
         dias_futuros = (fechas_futuras - data_filtrada['FECHA'].min()).days.values.reshape(-1, 1)
-        
+
         pred_tmax = model_tmax.predict(dias_futuros)
         pred_tmin = model_tmin.predict(dias_futuros)
         pred_precip = model_precip.predict(dias_futuros)
-        
-        # Gráfico de predicciones
+
         fig_pred, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
-        
-        # Temperaturas
         ax1.plot(data_filtrada['FECHA'], data_filtrada['TMAX'], label='TMAX Histórico', color='crimson')
         ax1.plot(data_filtrada['FECHA'], data_filtrada['TMIN'], label='TMIN Histórico', color='dodgerblue')
         ax1.plot(fechas_futuras, pred_tmax, '--', label='Predicción TMAX', color='darkred')
@@ -244,31 +232,25 @@ if not data_filtrada.empty:
         ax1.set_ylabel("Temperatura (°C)")
         ax1.set_title("Predicción de Temperaturas para los próximos 30 días")
         ax1.legend()
-        
-        # Precipitación
+
         ax2.plot(data_filtrada['FECHA'], data_filtrada['PRECIP'], label='PRECIP Histórico', color='seagreen')
         ax2.plot(fechas_futuras, pred_precip, '--', label='Predicción PRECIP', color='darkgreen')
         ax2.set_ylabel("Precipitación (mm)")
         ax2.set_title("Predicción de Precipitación para los próximos 30 días")
         ax2.legend()
-        
+
         plt.tight_layout()
         st.pyplot(fig_pred)
-        
-        # Mostrar valores predichos
+
         st.write("**Valores predichos para los próximos días:**")
-        
-        # Crear DataFrame con las predicciones
         pred_df = pd.DataFrame({
             'Fecha': fechas_futuras,
             'TMAX Predicha': pred_tmax,
             'TMIN Predicha': pred_tmin,
             'PRECIP Predicha': pred_precip
         })
-        
-        # Mostrar tabla con las predicciones
         st.dataframe(pred_df.set_index('Fecha').style.format("{:.1f}"), height=300)
-        
+
     else:
         st.warning("Se necesitan al menos 10 registros para generar predicciones. Ajuste los filtros para incluir más datos.")
 else:
@@ -277,7 +259,7 @@ else:
 st.markdown("---")
 
 if st.button("🔙 Volver al Inicio"):
-    st.session_state.page = "main"  
-    st.experimental_rerun()  
+    st.session_state.page = "main"
+    st.experimental_rerun()
 
 st.caption("© Dashboard Climático desarrollado por ❤️ por LuzWalker")
